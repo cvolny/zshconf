@@ -1,5 +1,5 @@
 # util
-function realpath() { python -c "import os,sys; print(os.path.realpath(sys.argv[1]))" "$0"; }
+function realpath() { python3 -c "import os,sys; print(os.path.realpath(sys.argv[1]))" "$0"; }
 
 function askme() {
     : <<-DOC
@@ -76,6 +76,28 @@ function start-my-day() {
     fi
 }
 
+function git-files-changed-since() {
+    local diffhash="${1?missing since hash argument #1}"
+
+    git diff --name-only ${diffhash} HEAD
+}
+
+function git-tests-report-since() {
+    local diffhash="${1?missing since hash argument #1}"
+    local flavor="${2?missing flavor argument #2}"
+    local subcommand
+
+    for tfile in $( git-files-changed-since ${diffhash} | grep '/test_' ); do
+        if [[ "${tfile}" == */itest* ]]; then
+            subcommand="itest"
+        else
+            subcommand="utest"
+        fi
+        printf '`ddi %s %s %s`\n' $subcommand $flavor $tfile
+
+    done
+}
+
 # utility
 alias ls="ls -FG"
 alias ll="ls -FGl"
@@ -85,3 +107,4 @@ alias grepr="grep --color=always -rns"
 alias greprc="grep --color -rns -C 5"
 alias zshrc="nano ~/.zshrc && source ~/.zshrc"
 alias history="builtin history 1 | less +G"
+alias testrp="(cd $HOME/src/sso-junkcode/cvolny/oidc; ./run-demo.sh)"

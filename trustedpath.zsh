@@ -13,7 +13,7 @@ eval "$( ddi-argcomplete-register )"
 alias ddi='nocorrect ddi'
 
 # ddi helpers
-DDI_FLAVORS=( devmaindb cloudsso admin main audit )
+DDI_FLAVORS=( devmaindb cloudsso admin main audit pwldb devicemanagement )
 function cdtp() {
     local oldpwd=$( realpath $( pwd ) )
     if [[ "${oldpwd}" != $( realpath $TRUSTEDPATH ) ]]; then
@@ -32,7 +32,7 @@ function ddi-start-all() {
     local flavor
     for flavor in ${flavors[@]}; do
         ( cdtp > /dev/null
-            ddi start "${flavor}" 2>&1 \
+          ddi restart "${flavor}" 2>&1 \
             | prefix "${flavor}" )
     done
 }
@@ -47,9 +47,37 @@ function ddi-refresh-all() {
     for flavor in ${flavors[@]}; do
         ( cdtp > /dev/null
             ddi refresh -f "${flavor}" 2>&1 \
-            | prefix "${flavor}" ) \
+            | prefix "${flavor}" && sleep 5 ) \
         || { echo "Failed on $flavor."
             return 1
         }
     done
+}
+
+
+function arc-land-nohooks()
+{
+    local hookfile_default="${TRUSTEDPATH}/.git/hooks/pre-commit"
+    local hookfile="${1:-${hookfile_default}}"
+    local disable_mode="${2:-644}"
+    local current_mode=$( stat -f "%A" "${hookfile}" )
+
+    pushd "${TRUSTEDPATH}"
+    echo "${hookfile} currently ${current_mode}. Set to ${disable_mode}..."
+    chmod ${disable_mode} "${hookfile}"
+    arc land
+    echo "Resetting to ${current_mode}..."
+    chmod ${current_mode} "${hookfile}"
+    popd
+}
+
+
+function run-until-fail()
+{
+    echo "Running '$*' until failure..."
+    while (( $? == 0 ))
+    do
+        $@
+    done
+    echo "Failed $?"
 }
