@@ -2,6 +2,8 @@
 export TRUSTEDPATH="$HOME/src/trustedpath"
 export OPSDIR="$HOME/src/ops"
 export PATH="$PATH:$TRUSTEDPATH/ddi:$HOME/bin"
+export DDI_PYENV="true"
+
 alias tp='cd "$TRUSTEDPATH"'
 alias ops='cd "$OPSDIR"'
 alias arc='duoconnect -arc -relay phab.duosec.org arc'
